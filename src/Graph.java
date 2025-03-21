@@ -13,7 +13,7 @@ import java.util.Comparator;
 class Graph {
     private Map<String, Artist> artistsById;
     private Map<String, Artist> artistsByName;
-    private Map<String, List<Mention>> adjacencyList;
+    private Map<String, Set<Mention>> adjacencyList;
 
     public Graph(String artistsFile, String mentionsFile) {
         artistsById = new HashMap<>();
@@ -42,7 +42,8 @@ class Graph {
                     Artist artist = new Artist(id, name, category);
                     artistsById.put(id, artist);
                     artistsByName.put(name, artist);
-                    adjacencyList.put(id, new ArrayList<>());
+                    adjacencyList.put(id, new HashSet<>(){
+                    });
                 }
             }
         }
@@ -59,7 +60,7 @@ class Graph {
                     int nbMentions = Integer.parseInt(parts[2]);
 
                     if (artistsById.containsKey(sourceId) && artistsById.containsKey(destId)) {
-                        Mention mention = new Mention(sourceId, destId, nbMentions);
+                        Mention mention = new Mention(sourceId, destId, 1/nbMentions);
                         adjacencyList.get(sourceId).add(mention);
                     }
                 }
@@ -75,12 +76,12 @@ class Graph {
         return artistsByName.get(name);
     }
 
-    public List<Mention> getOutgoingMentions(String artistId) {
-        return adjacencyList.getOrDefault(artistId, new ArrayList<>());
+    public Set<Mention> getOutgoingMentions(String artistId) {
+        return adjacencyList.getOrDefault(artistId, new HashSet<>());
     }
 
     public boolean areConnected(String sourceId, String destId) {
-        for (Mention mention : adjacencyList.getOrDefault(sourceId, new ArrayList<>())) {
+        for (Mention mention : adjacencyList.getOrDefault(sourceId, new HashSet<>())) {
             if (mention.getDestination().equals(destId)) {
                 return true;
             }
@@ -90,72 +91,7 @@ class Graph {
 
     // Méthode pour trouver le chemin le plus court entre deux artistes (en nombre d'arcs)
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
-        Artist sourceArtist = artistsByName.get(sourceNom);
-        Artist destArtist = artistsByName.get(destNom);
 
-        if (sourceArtist == null || destArtist == null) {
-            System.out.println("Artiste(s) non trouvé(s)");
-            return;
-        }
-
-        String sourceId = sourceArtist.getId();
-        String destId = destArtist.getId();
-
-        // Implémentation de l'algorithme BFS pour trouver le chemin le plus court
-        Map<String, String> predecesseurs = new HashMap<>();
-        Set<String> visites = new HashSet<>();
-        List<String> file = new ArrayList<>();
-
-        file.add(sourceId);
-        visites.add(sourceId);
-
-        boolean trouve = false;
-
-        while (!file.isEmpty() && !trouve) {
-            String courant = file.remove(0);
-
-            for (Mention mention : adjacencyList.get(courant)) {
-                String voisin = mention.getDestination();
-
-                if (!visites.contains(voisin)) {
-                    visites.add(voisin);
-                    file.add(voisin);
-                    predecesseurs.put(voisin, courant);
-
-                    if (voisin.equals(destId)) {
-                        trouve = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (trouve) {
-            // Reconstruction du chemin
-            List<String> chemin = new ArrayList<>();
-            String courant = destId;
-
-            while (!courant.equals(sourceId)) {
-                chemin.add(0, courant);
-                courant = predecesseurs.get(courant);
-            }
-
-            chemin.add(0, sourceId);
-
-            // Affichage du chemin
-            System.out.println("Chemin le plus court de " + sourceNom + " à " + destNom + " :");
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < chemin.size(); i++) {
-                sb.append(artistsById.get(chemin.get(i)).getName());
-                if (i < chemin.size() - 1) {
-                    sb.append(" -> ");
-                }
-            }
-            System.out.println(sb.toString());
-            System.out.println("Longueur du chemin : " + (chemin.size() - 1));
-        } else {
-            System.out.println("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
-        }
     }
 
     // Méthode pour trouver le chemin avec le maximum de mentions entre deux artistes
