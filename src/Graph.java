@@ -91,7 +91,83 @@ class Graph {
 
     // Méthode pour trouver le chemin le plus court entre deux artistes (en nombre d'arcs)
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
+        Artist sourceArtist = artistsByName.get(sourceNom);
+        Artist desArtist = artistsByName.get(destNom);
 
+        if (sourceArtist == null || desArtist == null) {
+            System.out.println("Artiste(s) non trouvé(s)");
+            return;
+        }
+
+        String sourceId = sourceArtist.getId();
+        String destId = desArtist.getId();
+
+        if (areConnected(sourceId,destId)){
+            System.out.println("Chemin le plus court de " + sourceNom + " à " + destNom + " :");
+            System.out.println(sourceNom + " -> " + destNom);
+        } else {
+            Map<String, Integer> distances = new HashMap<>();
+            Map<String, String> predecesseurs = new HashMap<>();
+            Set<String> visites = new HashSet<>();
+
+            for (String id : artistsById.keySet()) {
+                distances.put(id, Integer.MAX_VALUE);
+            }
+            distances.put(sourceId, 0);
+
+            PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(id -> distances.get(id)));
+            pq.add(sourceId);
+
+            while (!pq.isEmpty()) {
+                String courant = pq.poll();
+
+                if (courant.equals(destId)) {
+                    break;
+                }
+
+                if (visites.contains(courant)) {
+                    continue;
+                }
+
+                visites.add(courant);
+
+                for (Mention mention : adjacencyList.get(courant)) {
+                    String voisin = mention.getDestination();
+                    int nouvelleDistance = distances.get(courant) + 1;
+
+                    if (nouvelleDistance < distances.get(voisin)) {
+                        distances.put(voisin, nouvelleDistance);
+                        predecesseurs.put(voisin, courant);
+                        pq.add(voisin);
+                    }
+                }
+            }
+
+            if (predecesseurs.containsKey(destId)) {
+                List<String> chemin = new ArrayList<>();
+                String courant = destId;
+
+                while (!courant.equals(sourceId)) {
+                    chemin.add(0, courant);
+                    courant = predecesseurs.get(courant);
+                }
+
+                chemin.add(0, sourceId);
+
+                System.out.println("Chemin le plus court de " + sourceNom + " à " + destNom + " :");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < chemin.size(); i++) {
+                    sb.append(artistsById.get(chemin.get(i)).getName());
+                    if (i < chemin.size() - 1) {
+                        sb.append(" -> ");
+                    }
+                }
+                System.out.println(sb.toString());
+                System.out.println("Nombre total d'arcs : " + distances.get(destId));
+            } else {
+                System.out.println("Aucun chemin trouvé entre " + sourceNom + " et" + destNom);
+            }
+        }
     }
 
     // Méthode pour trouver le chemin avec le maximum de mentions entre deux artistes
