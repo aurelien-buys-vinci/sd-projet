@@ -86,8 +86,7 @@ class Graph {
         }
         return false;
     }
-
-    // Méthode pour trouver le chemin le plus court entre deux artistes (en nombre d'arcs)
+    
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
         Artist sourceArtist = getArtistByName(sourceNom);
         Artist destArtist = getArtistByName(destNom);
@@ -155,8 +154,18 @@ class Graph {
         }
     }
 
-    // Méthode pour trouver le chemin avec le maximum de mentions entre deux artistes
+
     public void trouverCheminMaxMentions(String sourceNom, String destNom) {
+        Artist sourceArtist = getArtistByName(sourceNom);
+        Artist destArtist = getArtistByName(destNom);
+
+        if (sourceArtist == null || destArtist == null) {
+            System.out.println("Un des artistes n'existe pas.");
+            return;
+        }
+
+        int sourceId = sourceArtist.getId();
+        int destId = destArtist.getId();
 
     }
 }
