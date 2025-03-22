@@ -1,4 +1,4 @@
-public class Mention {
+public class Mention implements Comparable<Mention> {
     private final int source;
     private final int destination;
     private final double nbMentions;
@@ -22,5 +22,10 @@ public class Mention {
     @Override
     public String toString() {
         return "Mention [source=" + source + ", destination=" + destination + ", nbMentions=" + nbMentions + "]";
+    }
+
+    @Override
+    public int compareTo(Mention o) {
+        return Double.compare(this.nbMentions, o.nbMentions);
     }
 }

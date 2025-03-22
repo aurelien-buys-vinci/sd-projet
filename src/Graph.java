@@ -2,9 +2,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -36,7 +38,6 @@ class Graph {
                     int id = Integer.parseInt(parts[0]);
                     String name = parts[1];
                     String category = parts[2];
-
                     Artist artist = new Artist(id, name, category);
                     artistsById.put(id, artist);
                     artistsByName.put(name, artist);
@@ -76,15 +77,6 @@ class Graph {
 
     public Set<Mention> getOutgoingMentions(int artistId) {
         return adjacencyList.get(artistId);
-    }
-
-    public boolean areConnected(int sourceId, int destId) {
-        for (Mention mention : getOutgoingMentions(sourceId)) {
-            if (mention.getDestination() == destId) {
-                return true;
-            }
-        }
-        return false;
     }
     
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
@@ -167,5 +159,47 @@ class Graph {
         int sourceId = sourceArtist.getId();
         int destId = destArtist.getId();
 
+        double[] definitive = new double[43000];
+        Arrays.fill(definitive, Double.POSITIVE_INFINITY);
+        definitive[sourceId] = 0;
+
+        Map<Integer, Integer> predecesseurs = new HashMap<>();
+        predecesseurs.put(sourceId, null);
+
+        PriorityQueue<Mention> file = new PriorityQueue<>();
+
+        file.add(new Mention(sourceId, sourceId, 0));
+        while(!file.isEmpty()){
+            int current = file.poll().getDestination();
+            for (Mention mention : getOutgoingMentions(current)) {
+                if(mention.getNbMentions() + definitive[current] < definitive[mention.getDestination()]){
+                    definitive[mention.getDestination()] = mention.getNbMentions() + definitive[current];
+                    file.add(new Mention(sourceId, mention.getDestination(), mention.getNbMentions() + definitive[current]));
+                    predecesseurs.put(mention.getDestination(), current);
+                }
+            }
+        }
+
+        Deque<Integer> chemin = new ArrayDeque<>();
+        int current = destId;
+        double cout = 0;
+        while (current != sourceId) {
+            for (Mention mention : getOutgoingMentions(predecesseurs.get(current))) {
+                if (mention.getDestination() == current) {
+                    cout += mention.getNbMentions();
+                    break;
+                }
+            }
+            chemin.addFirst(current);
+            current = predecesseurs.get(current);
+        }
+        System.out.println("Longueur de chemin : " + chemin.size());
+        System.out.println("Cout total du chemin : " + cout);
+        chemin.addFirst(sourceId);
+        System.out.println("Chemin : ");
+        for (Integer i : chemin) {
+            Artist artist = getArtistById(i);
+            System.out.println(artist.getName() + " (" + artist.getCategory() + ")");
+        }
     }
 }
