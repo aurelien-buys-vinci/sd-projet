@@ -3,17 +3,17 @@ import java.util.Map;
 import java.util.Objects;
 
 class Artist {
-    private String id;
+    private int id;
     private String name;
     private String category;
 
-    public Artist(String id, String name, String category) {
+    public Artist(int id, String name, String category) {
         this.id = id;
         this.name = name;
         this.category = category;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 

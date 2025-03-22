@@ -1,19 +1,19 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Comparator;
 
 class Graph {
-    private Map<String, Artist> artistsById;
+    private Map<Integer, Artist> artistsById;
     private Map<String, Artist> artistsByName;
-    private Map<String, Set<Mention>> adjacencyList;
+    private Map<Integer, Set<Mention>> adjacencyList;
 
     public Graph(String artistsFile, String mentionsFile) {
         artistsById = new HashMap<>();
@@ -35,10 +35,9 @@ class Graph {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 3);
                 if (parts.length == 3) {
-                    String id = parts[0];
+                    int id = Integer.parseInt(parts[0]);
                     String name = parts[1];
                     String category = parts[2];
-
                     Artist artist = new Artist(id, name, category);
                     artistsById.put(id, artist);
                     artistsByName.put(name, artist);
@@ -55,12 +54,12 @@ class Graph {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length == 3) {
-                    String sourceId = parts[0];
-                    String destId = parts[1];
-                    int nbMentions = Integer.parseInt(parts[2]);
+                    int sourceId = Integer.parseInt(parts[0]);
+                    int destId = Integer.parseInt(parts[1]);
+                    double nbMentions = (double) 1 /Integer.parseInt(parts[2]);
 
                     if (artistsById.containsKey(sourceId) && artistsById.containsKey(destId)) {
-                        Mention mention = new Mention(sourceId, destId, 1/nbMentions);
+                        Mention mention = new Mention(sourceId, destId, nbMentions);
                         adjacencyList.get(sourceId).add(mention);
                     }
                 }
@@ -68,7 +67,7 @@ class Graph {
         }
     }
 
-    public Artist getArtistById(String id) {
+    public Artist getArtistById(int id) {
         return artistsById.get(id);
     }
 
@@ -76,178 +75,131 @@ class Graph {
         return artistsByName.get(name);
     }
 
-    public Set<Mention> getOutgoingMentions(String artistId) {
-        return adjacencyList.getOrDefault(artistId, new HashSet<>());
+    public Set<Mention> getOutgoingMentions(int artistId) {
+        return adjacencyList.get(artistId);
     }
-
-    public boolean areConnected(String sourceId, String destId) {
-        for (Mention mention : adjacencyList.getOrDefault(sourceId, new HashSet<>())) {
-            if (mention.getDestination().equals(destId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Méthode pour trouver le chemin le plus court entre deux artistes (en nombre d'arcs)
+    
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
-        Artist sourceArtist = artistsByName.get(sourceNom);
-        Artist desArtist = artistsByName.get(destNom);
-
-        if (sourceArtist == null || desArtist == null) {
-            System.out.println("Artiste(s) non trouvé(s)");
-            return;
-        }
-
-        String sourceId = sourceArtist.getId();
-        String destId = desArtist.getId();
-
-        if (areConnected(sourceId,destId)){
-            System.out.println("Chemin le plus court de " + sourceNom + " à " + destNom + " :");
-            System.out.println(sourceNom + " -> " + destNom);
-        } else {
-            Map<String, Integer> distances = new HashMap<>();
-            Map<String, String> predecesseurs = new HashMap<>();
-            Set<String> visites = new HashSet<>();
-
-            for (String id : artistsById.keySet()) {
-                distances.put(id, Integer.MAX_VALUE);
-            }
-            distances.put(sourceId, 0);
-
-            PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(id -> distances.get(id)));
-            pq.add(sourceId);
-
-            while (!pq.isEmpty()) {
-                String courant = pq.poll();
-
-                if (courant.equals(destId)) {
-                    break;
-                }
-
-                if (visites.contains(courant)) {
-                    continue;
-                }
-
-                visites.add(courant);
-
-                for (Mention mention : adjacencyList.get(courant)) {
-                    String voisin = mention.getDestination();
-                    int nouvelleDistance = distances.get(courant) + 1;
-
-                    if (nouvelleDistance < distances.get(voisin)) {
-                        distances.put(voisin, nouvelleDistance);
-                        predecesseurs.put(voisin, courant);
-                        pq.add(voisin);
-                    }
-                }
-            }
-
-            if (predecesseurs.containsKey(destId)) {
-                List<String> chemin = new ArrayList<>();
-                String courant = destId;
-
-                while (!courant.equals(sourceId)) {
-                    chemin.add(0, courant);
-                    courant = predecesseurs.get(courant);
-                }
-
-                chemin.add(0, sourceId);
-
-                System.out.println("Chemin le plus court de " + sourceNom + " à " + destNom + " :");
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < chemin.size(); i++) {
-                    sb.append(artistsById.get(chemin.get(i)).getName());
-                    if (i < chemin.size() - 1) {
-                        sb.append(" -> ");
-                    }
-                }
-                System.out.println(sb.toString());
-                System.out.println("Nombre total d'arcs : " + distances.get(destId));
-            } else {
-                System.out.println("Aucun chemin trouvé entre " + sourceNom + " et" + destNom);
-            }
-        }
-    }
-
-    // Méthode pour trouver le chemin avec le maximum de mentions entre deux artistes
-    public void trouverCheminMaxMentions(String sourceNom, String destNom) {
-        Artist sourceArtist = artistsByName.get(sourceNom);
-        Artist destArtist = artistsByName.get(destNom);
+        Artist sourceArtist = getArtistByName(sourceNom);
+        Artist destArtist = getArtistByName(destNom);
 
         if (sourceArtist == null || destArtist == null) {
-            System.out.println("Artiste(s) non trouvé(s)");
+            System.out.println("Un des artistes n'existe pas.");
             return;
         }
 
-        String sourceId = sourceArtist.getId();
-        String destId = destArtist.getId();
+        int sourceId = sourceArtist.getId();
+        int destId = destArtist.getId();
 
-        // Implémentation de l'algorithme de Dijkstra modifié pour trouver le chemin avec le maximum de mentions
-        Map<String, Integer> mentions = new HashMap<>();
-        Map<String, String> predecesseurs = new HashMap<>();
-        Set<String> visites = new HashSet<>();
+        Deque<Integer> pile = new ArrayDeque<>();
+        Map<Integer, Integer> predecesseurs = new HashMap<>();
+        Set<Integer> visites = new HashSet<>();
 
-        // Initialisation
-        for (String id : artistsById.keySet()) {
-            mentions.put(id, Integer.MIN_VALUE);
-        }
-        mentions.put(sourceId, 0);
+        pile.add(sourceId);
+        predecesseurs.put(sourceId, null);
+        visites.add(sourceId);
 
-        // File de priorité pour sélectionner le nœud avec le plus de mentions
-        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(id -> -mentions.get(id)));
-        pq.add(sourceId);
-
-        while (!pq.isEmpty()) {
-            String courant = pq.poll();
-
-            if (courant.equals(destId)) {
+        boolean trouve = false;
+        while (!pile.isEmpty() && !trouve) {
+            int current = pile.pop();
+            if (current == destId) {
                 break;
             }
-
-            if (visites.contains(courant)) {
-                continue;
+            for (Mention mention : getOutgoingMentions(current)) {
+                int voisin = mention.getDestination();
+                if (!visites.contains(voisin)) {
+                    pile.add(voisin);
+                    predecesseurs.put(voisin, current);
+                    visites.add(voisin);
+                }
+                if (voisin == destId){
+                    trouve = true;
+                    break;
+                }
             }
+        }
+        if(!trouve){
+            System.out.println("Il n'y a pas de chemin entre " + sourceNom + " et " + destNom);
+            return;
+        }
 
-            visites.add(courant);
+        Deque<Integer> chemin = new ArrayDeque<>();
+        int current = destId;
+        double cout = 0;
+        while (current != sourceId) {
+            for (Mention mention : getOutgoingMentions(predecesseurs.get(current))) {
+                if (mention.getDestination() == current) {
+                    cout += mention.getNbMentions();
+                    break;
+                }
+            }
+            chemin.addFirst(current);
+            current = predecesseurs.get(current);
+        }
+        System.out.println("Longueur de chemin : " + chemin.size());
+        System.out.println("Cout total du chemin : " + cout);
+        chemin.addFirst(sourceId);
+        System.out.println("Chemin : ");
+        for (Integer i : chemin) {
+            Artist artist = getArtistById(i);
+            System.out.println(artist.getName() + " (" + artist.getCategory() + ")");
+        }
+    }
 
-            for (Mention mention : adjacencyList.get(courant)) {
-                String voisin = mention.getDestination();
-                int nouvellesMentions = mentions.get(courant) + mention.getNbMentions();
 
-                if (nouvellesMentions > mentions.get(voisin)) {
-                    mentions.put(voisin, nouvellesMentions);
-                    predecesseurs.put(voisin, courant);
-                    pq.add(voisin);
+    public void trouverCheminMaxMentions(String sourceNom, String destNom) {
+        Artist sourceArtist = getArtistByName(sourceNom);
+        Artist destArtist = getArtistByName(destNom);
+
+        if (sourceArtist == null || destArtist == null) {
+            System.out.println("Un des artistes n'existe pas.");
+            return;
+        }
+
+        int sourceId = sourceArtist.getId();
+        int destId = destArtist.getId();
+
+        double[] definitive = new double[43000];
+        Arrays.fill(definitive, Double.POSITIVE_INFINITY);
+        definitive[sourceId] = 0;
+
+        Map<Integer, Integer> predecesseurs = new HashMap<>();
+        predecesseurs.put(sourceId, null);
+
+        PriorityQueue<Mention> file = new PriorityQueue<>();
+
+        file.add(new Mention(sourceId, sourceId, 0));
+        while(!file.isEmpty()){
+            int current = file.poll().getDestination();
+            for (Mention mention : getOutgoingMentions(current)) {
+                if(mention.getNbMentions() + definitive[current] < definitive[mention.getDestination()]){
+                    definitive[mention.getDestination()] = mention.getNbMentions() + definitive[current];
+                    file.add(new Mention(sourceId, mention.getDestination(), mention.getNbMentions() + definitive[current]));
+                    predecesseurs.put(mention.getDestination(), current);
                 }
             }
         }
 
-        if (predecesseurs.containsKey(destId)) {
-            // Reconstruction du chemin
-            List<String> chemin = new ArrayList<>();
-            String courant = destId;
-
-            while (!courant.equals(sourceId)) {
-                chemin.add(0, courant);
-                courant = predecesseurs.get(courant);
-            }
-
-            chemin.add(0, sourceId);
-
-            // Affichage du chemin
-            System.out.println("Chemin avec le maximum de mentions de " + sourceNom + " à " + destNom + " :");
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < chemin.size(); i++) {
-                sb.append(artistsById.get(chemin.get(i)).getName());
-                if (i < chemin.size() - 1) {
-                    sb.append(" -> ");
+        Deque<Integer> chemin = new ArrayDeque<>();
+        int current = destId;
+        double cout = 0;
+        while (current != sourceId) {
+            for (Mention mention : getOutgoingMentions(predecesseurs.get(current))) {
+                if (mention.getDestination() == current) {
+                    cout += mention.getNbMentions();
+                    break;
                 }
             }
-            System.out.println(sb.toString());
-            System.out.println("Nombre total de mentions : " + mentions.get(destId));
-        } else {
-            System.out.println("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
+            chemin.addFirst(current);
+            current = predecesseurs.get(current);
+        }
+        System.out.println("Longueur de chemin : " + chemin.size());
+        System.out.println("Cout total du chemin : " + cout);
+        chemin.addFirst(sourceId);
+        System.out.println("Chemin : ");
+        for (Integer i : chemin) {
+            Artist artist = getArtistById(i);
+            System.out.println(artist.getName() + " (" + artist.getCategory() + ")");
         }
     }
 }
