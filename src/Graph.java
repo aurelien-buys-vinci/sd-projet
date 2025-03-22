@@ -1,14 +1,12 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Comparator;
 
 class Graph {
     private Map<Integer, Artist> artistsById;
@@ -91,7 +89,70 @@ class Graph {
 
     // Méthode pour trouver le chemin le plus court entre deux artistes (en nombre d'arcs)
     public void trouverCheminLePlusCourt(String sourceNom, String destNom) {
+        Artist sourceArtist = getArtistByName(sourceNom);
+        Artist destArtist = getArtistByName(destNom);
 
+        if (sourceArtist == null || destArtist == null) {
+            System.out.println("Un des artistes n'existe pas.");
+            return;
+        }
+
+        int sourceId = sourceArtist.getId();
+        int destId = destArtist.getId();
+
+        Deque<Integer> pile = new ArrayDeque<>();
+        Map<Integer, Integer> predecesseurs = new HashMap<>();
+        Set<Integer> visites = new HashSet<>();
+
+        pile.add(sourceId);
+        predecesseurs.put(sourceId, null);
+        visites.add(sourceId);
+
+        boolean trouve = false;
+        while (!pile.isEmpty() && !trouve) {
+            int current = pile.pop();
+            if (current == destId) {
+                break;
+            }
+            for (Mention mention : getOutgoingMentions(current)) {
+                int voisin = mention.getDestination();
+                if (!visites.contains(voisin)) {
+                    pile.add(voisin);
+                    predecesseurs.put(voisin, current);
+                    visites.add(voisin);
+                }
+                if (voisin == destId){
+                    trouve = true;
+                    break;
+                }
+            }
+        }
+        if(!trouve){
+            System.out.println("Il n'y a pas de chemin entre " + sourceNom + " et " + destNom);
+            return;
+        }
+
+        Deque<Integer> chemin = new ArrayDeque<>();
+        int current = destId;
+        double cout = 0;
+        while (current != sourceId) {
+            for (Mention mention : getOutgoingMentions(predecesseurs.get(current))) {
+                if (mention.getDestination() == current) {
+                    cout += mention.getNbMentions();
+                    break;
+                }
+            }
+            chemin.addFirst(current);
+            current = predecesseurs.get(current);
+        }
+        System.out.println("Longueur de chemin : " + chemin.size());
+        System.out.println("Cout total du chemin : " + cout);
+        chemin.addFirst(sourceId);
+        System.out.println("Chemin : ");
+        for (Integer i : chemin) {
+            Artist artist = getArtistById(i);
+            System.out.println(artist.getName() + " (" + artist.getCategory() + ")");
+        }
     }
 
     // Méthode pour trouver le chemin avec le maximum de mentions entre deux artistes
