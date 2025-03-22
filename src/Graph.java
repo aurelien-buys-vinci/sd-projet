@@ -84,8 +84,7 @@ class Graph {
         Artist destArtist = getArtistByName(destNom);
 
         if (sourceArtist == null || destArtist == null) {
-            System.out.println("Un des artistes n'existe pas.");
-            return;
+            throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
         }
 
         int sourceId = sourceArtist.getId();
@@ -119,8 +118,7 @@ class Graph {
             }
         }
         if(!trouve){
-            System.out.println("Il n'y a pas de chemin entre " + sourceNom + " et " + destNom);
-            return;
+            throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
         }
 
         Deque<Integer> chemin = new ArrayDeque<>();
@@ -152,14 +150,13 @@ class Graph {
         Artist destArtist = getArtistByName(destNom);
 
         if (sourceArtist == null || destArtist == null) {
-            System.out.println("Un des artistes n'existe pas.");
-            return;
+            throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
         }
 
         int sourceId = sourceArtist.getId();
         int destId = destArtist.getId();
 
-        double[] definitive = new double[43000];
+        double[] definitive = new double[artistsById.size()+1];
         Arrays.fill(definitive, Double.POSITIVE_INFINITY);
         definitive[sourceId] = 0;
 
@@ -179,7 +176,9 @@ class Graph {
                 }
             }
         }
-
+        if(!predecesseurs.containsKey(destId)){
+            throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
+        }
         Deque<Integer> chemin = new ArrayDeque<>();
         int current = destId;
         double cout = 0;
