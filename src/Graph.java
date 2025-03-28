@@ -151,8 +151,8 @@ class Graph {
             }
             for (Mention mention : getOutgoingMentions(current)) {
                 int destination = mention.getDestination();
-                double cout = mention.getNbMentions() + definitive.get(current);
-                if(cout < definitive.getOrDefault(destination, Double.POSITIVE_INFINITY)){
+                double cost = mention.getNbMentions() + definitive.get(current);
+                if(cost < definitive.getOrDefault(destination, Double.POSITIVE_INFINITY)){
                     double newCost = mention.getNbMentions() + definitive.get(current);
                     definitive.put(destination, newCost);
                     file.add(new PoidsSource(newCost, destination));
