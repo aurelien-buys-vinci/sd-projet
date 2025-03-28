@@ -144,18 +144,20 @@ class Graph {
 
         file.add(new PoidsSource(0, sourceId));
         while(!file.isEmpty()){
+
             PoidsSource poidsSource = file.poll();
-            if(definitive.getOrDefault(poidsSource.getIdArtist(), Double.POSITIVE_INFINITY) < poidsSource.getPoids()){
+            int current = poidsSource.getIdArtist();
+            if(definitive.getOrDefault(current, Double.POSITIVE_INFINITY) < poidsSource.getPoids()){
                 continue;
             }
-            int current = poidsSource.getIdArtist();
             for (Mention mention : getOutgoingMentions(current)) {
+                int destination = mention.getDestination();
                 double cout = mention.getNbMentions() + definitive.get(current);
-                if(cout < definitive.getOrDefault(mention.getDestination(), Double.POSITIVE_INFINITY)){
+                if(cout < definitive.getOrDefault(destination, Double.POSITIVE_INFINITY)){
                     double newCost = mention.getNbMentions() + definitive.get(current);
-                    definitive.put(mention.getDestination(), newCost);
-                    file.add(new PoidsSource(newCost, mention.getDestination()));
-                    predecesseurs.put(mention.getDestination(), current);
+                    definitive.put(destination, newCost);
+                    file.add(new PoidsSource(newCost, destination));
+                    predecesseurs.put(destination, current);
                 }
             }
         }
