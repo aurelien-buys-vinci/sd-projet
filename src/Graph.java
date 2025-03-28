@@ -121,27 +121,7 @@ class Graph {
             throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
         }
 
-        Deque<Integer> chemin = new ArrayDeque<>();
-        int current = destId;
-        double cout = 0;
-        while (current != sourceId) {
-            for (Mention mention : getOutgoingMentions(predecesseurs.get(current))) {
-                if (mention.getDestination() == current) {
-                    cout += mention.getNbMentions();
-                    break;
-                }
-            }
-            chemin.addFirst(current);
-            current = predecesseurs.get(current);
-        }
-        System.out.println("Longueur de chemin : " + chemin.size());
-        System.out.println("Cout total du chemin : " + cout);
-        chemin.addFirst(sourceId);
-        System.out.println("Chemin : ");
-        for (Integer i : chemin) {
-            Artist artist = getArtistById(i);
-            System.out.println(artist.getName() + " (" + artist.getCategory() + ")");
-        }
+        affichage(sourceId, destId, predecesseurs);
     }
 
 
@@ -162,16 +142,15 @@ class Graph {
 
         Map<Integer, Integer> predecesseurs = new HashMap<>();
         predecesseurs.put(sourceId, null);
+        PriorityQueue<PoidsSource> file = new PriorityQueue<>();
 
-        PriorityQueue<Mention> file = new PriorityQueue<>();
-
-        file.add(new Mention(sourceId, sourceId, 0));
+        file.add(new PoidsSource(0, sourceId));
         while(!file.isEmpty()){
-            int current = file.poll().getDestination();
+            int current = file.poll().getArtist();
             for (Mention mention : getOutgoingMentions(current)) {
                 if(mention.getNbMentions() + definitive[current] < definitive[mention.getDestination()]){
                     definitive[mention.getDestination()] = mention.getNbMentions() + definitive[current];
-                    file.add(new Mention(sourceId, mention.getDestination(), mention.getNbMentions() + definitive[current]));
+                    file.add(new PoidsSource(mention.getNbMentions() + definitive[current], mention.getDestination()));
                     predecesseurs.put(mention.getDestination(), current);
                 }
             }
@@ -179,6 +158,10 @@ class Graph {
         if(!predecesseurs.containsKey(destId)){
             throw new RuntimeException("Aucun chemin trouvé entre " + sourceNom + " et " + destNom);
         }
+        affichage(sourceId, destId, predecesseurs);
+    }
+
+    private void affichage(int sourceId, int destId, Map<Integer, Integer> predecesseurs) {
         Deque<Integer> chemin = new ArrayDeque<>();
         int current = destId;
         double cout = 0;
