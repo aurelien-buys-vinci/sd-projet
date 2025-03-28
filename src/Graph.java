@@ -135,9 +135,8 @@ class Graph {
 
         int sourceId = sourceArtist.getId();
         int destId = destArtist.getId();
-        double[] definitive = new double[artistsById.size()+1];
-        Arrays.fill(definitive, Double.POSITIVE_INFINITY);
-        definitive[sourceId] = 0;
+        Map<Integer, Double> definitive = new HashMap<>();
+        definitive.put(sourceId, 0.0);
 
         Map<Integer, Integer> predecesseurs = new HashMap<>();
         predecesseurs.put(sourceId, null);
@@ -145,11 +144,17 @@ class Graph {
 
         file.add(new PoidsSource(0, sourceId));
         while(!file.isEmpty()){
-            int current = file.poll().getIdArtist();
+            PoidsSource poidsSource = file.poll();
+            if(definitive.getOrDefault(poidsSource.getIdArtist(), Double.POSITIVE_INFINITY) < poidsSource.getPoids()){
+                continue;
+            }
+            int current = poidsSource.getIdArtist();
             for (Mention mention : getOutgoingMentions(current)) {
-                if(mention.getNbMentions() + definitive[current] < definitive[mention.getDestination()]){
-                    definitive[mention.getDestination()] = mention.getNbMentions() + definitive[current];
-                    file.add(new PoidsSource(mention.getNbMentions() + definitive[current], mention.getDestination()));
+                double cout = mention.getNbMentions() + definitive.get(current);
+                if(cout < definitive.getOrDefault(mention.getDestination(), Double.POSITIVE_INFINITY)){
+                    double newCost = mention.getNbMentions() + definitive.get(current);
+                    definitive.put(mention.getDestination(), newCost);
+                    file.add(new PoidsSource(newCost, mention.getDestination()));
                     predecesseurs.put(mention.getDestination(), current);
                 }
             }
