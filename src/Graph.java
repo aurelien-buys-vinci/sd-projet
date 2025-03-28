@@ -144,7 +144,6 @@ class Graph {
 
         file.add(new PoidsSource(0, sourceId));
         while(!file.isEmpty()){
-
             PoidsSource poidsSource = file.poll();
             int current = poidsSource.getIdArtist();
             if(definitive.getOrDefault(current, Double.POSITIVE_INFINITY) < poidsSource.getPoids()){
