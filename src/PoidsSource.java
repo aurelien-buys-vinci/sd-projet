@@ -1,14 +1,14 @@
 public class PoidsSource implements Comparable<PoidsSource> {
-  private int artist;
+  private int idArtist;
   private double poids;
 
-  public PoidsSource(double poids, int artist) {
+  public PoidsSource(double poids, int idArtist) {
     this.poids = poids;
-    this.artist = artist;
+    this.idArtist = idArtist;
   }
 
-  public int getArtist() {
-    return artist;
+  public int getIdArtist() {
+    return idArtist;
   }
 
   public double getPoids() {

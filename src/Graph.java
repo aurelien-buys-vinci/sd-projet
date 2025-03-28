@@ -135,7 +135,6 @@ class Graph {
 
         int sourceId = sourceArtist.getId();
         int destId = destArtist.getId();
-
         double[] definitive = new double[artistsById.size()+1];
         Arrays.fill(definitive, Double.POSITIVE_INFINITY);
         definitive[sourceId] = 0;
@@ -146,7 +145,7 @@ class Graph {
 
         file.add(new PoidsSource(0, sourceId));
         while(!file.isEmpty()){
-            int current = file.poll().getArtist();
+            int current = file.poll().getIdArtist();
             for (Mention mention : getOutgoingMentions(current)) {
                 if(mention.getNbMentions() + definitive[current] < definitive[mention.getDestination()]){
                     definitive[mention.getDestination()] = mention.getNbMentions() + definitive[current];
